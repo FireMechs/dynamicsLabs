@@ -1,8 +1,10 @@
 %------------------------main--------------------------%
 function lab1
+    %----------- Quiz (a) ---------
     theta2 = get_precision_angles(15,165,3);
+    %----------- Quiz (b) ---------
+    %theta2  = get_precision_angles(15,165,5);
     theta2 = arrayfun(@(val) rad2deg(val), theta2);
-    disp(theta2);
     theta4 = get_theta_4(theta2);
     link_ratios = get_link_ratios(theta2, theta4);
     [a,b,c,d] = get_link_lengths(link_ratios);
@@ -11,6 +13,12 @@ function lab1
     disp(["Follower: ",c]);
     disp(["Fixed Link: ",d]);
     transmission_angles = get_transmission_angles(a,b,c,d,15,165,5);
+    % commenting  on the transmission angles
+    if (all(transmission_angles >= 40)) || (all(transmission_angles <= 140))
+        disp("All the transmission angles guarantee a smooth rotation");
+    else
+        disp("Some transmission angles do not guarantee a smooth rotation");
+    end
     input_angles = 15:5:165;
     figure;
     plot(input_angles,transmission_angles,'r');
@@ -41,13 +49,22 @@ function theta_4 = get_theta_4(theta_2)
 end
 function link_ratios  = get_link_ratios(theta2, theta4)
    % using the freudensteins method, this method computes the link ratios
-   A = [(cosd(theta4(1))) (-1 * (cosd(theta2(1)))) (1);
-        (cosd(theta4(2))) (-1 * (cosd(theta2(2)))) (1);
-        (cosd(theta4(3))) (-1 * (cosd(theta2(3)))) (1)];
-   b = [(cosd(theta2(1) - theta4(1)));
-        (cosd(theta2(2) - theta4(2)));
-        (cosd(theta2(3) - theta4(3)))];
-   link_ratios = A\b;
+   if(length(theta4) ~= length(theta2))
+       disp("Matrices' lengths not equal");
+       quit(1);
+   end
+   A = [];
+   b = [];
+   for i = 1:length(theta2)
+       temp1 = [(cosd(theta4(i))) (-1 * (cosd(theta2(i)))) (1)];
+       temp2 = cosd(theta2(i)-theta4(i));
+       A = [A; temp1];
+       b = [b; temp2];
+   end
+   disp(A);
+   disp("------------");
+   disp(b);
+   link_ratios = A\b;% backstroke uses the least squares method
 end
 function [a,b,c,d] = get_link_lengths(link_ratios)
     d = 410;
