@@ -1,12 +1,14 @@
 %------------------------main--------------------------%
 function lab1
     %----------- Quiz (a) ---------
-    theta2 = get_precision_angles(15,165,3);
+    %theta2 = get_precision_angles(15,165,3);
     %----------- Quiz (b) ---------
-    %theta2  = get_precision_angles(15,165,5);
+    theta2  = get_precision_angles(15,165,5);
     theta2 = arrayfun(@(val) rad2deg(val), theta2);
     theta4 = get_theta_4(theta2);
     link_ratios = get_link_ratios(theta2, theta4);
+    structural_errors = get_structural_errors(theta2, theta4,link_ratios);
+    disp(["Structural errors: ",structural_errors]);
     [a,b,c,d] = get_link_lengths(link_ratios);
     disp(["Crank: ",a]);
     disp(["Coupler: ",b]);
@@ -61,9 +63,6 @@ function link_ratios  = get_link_ratios(theta2, theta4)
        A = [A; temp1];
        b = [b; temp2];
    end
-   disp(A);
-   disp("------------");
-   disp(b);
    link_ratios = A\b;% backstroke uses the least squares method
 end
 function [a,b,c,d] = get_link_lengths(link_ratios)
@@ -81,5 +80,11 @@ function transmission_angles = get_transmission_angles(a,b,c,d,lower_limit, uppe
         j = j + 1;
     end
 end
-
+function structuralErrors = get_structural_errors(theta2, theta4, link_ratios)
+    structuralErrors = zeros(1,length(theta2));% theta4 can also be used since they are of the same length
+    for i = 1:length(theta4)
+        er1 = link_ratios(1)*cosd(theta4(i)) - link_ratios(2)*cosd(theta2(i)) + link_ratios(3) - cosd(theta2(i) - theta4(i));
+        structuralErrors(i) = er1;
+    end
+end
 
