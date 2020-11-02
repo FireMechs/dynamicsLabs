@@ -67,9 +67,9 @@ function link_ratios  = get_link_ratios(theta2, theta4)
 end
 function [a,b,c,d] = get_link_lengths(link_ratios)
     d = 410;
-    a = d/link_ratios(1);
-    c = d/link_ratios(2);
-    b = sqrt(a^2  + c^2 + d^2 -(link_ratios(3) * 2 * a * c));
+    a = abs(d/link_ratios(1));
+    c = abs(d/link_ratios(2));
+    b = abs(sqrt(a^2  + c^2 + d^2 -(link_ratios(3) * 2 * a * c)));
 end
 function transmission_angles = get_transmission_angles(a,b,c,d,lower_limit, upper_limit, steps)
     transmission_angles = zeros(1, ((165-15)/5));
