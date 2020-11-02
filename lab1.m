@@ -3,37 +3,66 @@
 % Arrays are initialized before assigning to boost the performance of the
 % program.
 function lab1
-    %----------- Quiz (a) ---------
-    %theta2 = get_precision_angles(15,165,3);
-    %----------- Quiz (b) ---------
-    theta2  = get_precision_angles(15,165,5); % This returns the angles in radians
-    theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
-    theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
-    link_ratios = get_link_ratios(theta2, theta4);% uses freudeinsten equation to compute the link length ratios
-    structural_errors = get_structural_errors(theta2, theta4,link_ratios);% Uses the freudeinsten method to obtain structural errors
-    disp("Structural errors:");
-    disp(structural_errors);
-    [a,b,c,d] = get_link_lengths(link_ratios);% using the link ratios from above the respective link lengths are obtained
-    disp(["Crank: ",a]);
-    disp(["Coupler: ",b]);
-    disp(["Follower: ",c]);
-    disp(["Fixed Link: ",d]);
-    transmission_angles = get_transmission_angles(a,b,c,d,15,165,5);% transmission angles are then calculated
-    % commenting  on the quality of the transmission angles
-    if (all(transmission_angles >= 40)) || (all(transmission_angles <= 140))
-        disp("All the transmission angles guarantee a smooth rotation");
+    [idx, sl] = listdlg('ListSize',[150,150],'PromptString',{'Select question'},'SelectionMode','single','ListString',{'a','b','c'});
+    if(sl == 1)
+        if (idx == 1)
+                %----------- Quiz (a) ---------
+            getResults(3);% calls the get results function with 3 precision points
+        end
+        if (idx == 2)
+                %----------- Quiz (b) ---------
+             getResults(5);
+        end 
+        if (idx == 3)
+            link_ration_A = generateLinkRatios(3);
+            link_ration_B = generateLinkRatios(5);
+            input_angles = 15:5:165;
+                % get the corresponding output angles
+            output_angles = get_theta_4(input_angles);
+            structural_errors_A = get_structural_errors(input_angles, output_angles,link_ration_A);
+            structural_errors_B = get_structural_errors(input_angles, output_angles,link_ration_B);
+            figure;
+            plot(input_angles, structural_errors_A,'r-',input_angles, structural_errors_B,'b-');
+            xlabel("Input angles");
+            ylabel("Structural Error");
+            title("Structural Errors Vs Input  angles");
+        end
     else
-        disp("Some transmission angles do not guarantee a smooth rotation");
+        quit(1);
     end
-    % Plotting the input angles against the transmission angles.
-    input_angles = 15:5:165;
-    figure;
-    plot(input_angles,transmission_angles,'r');
-    xlabel("Input  angles");
-    ylabel("Transmission angles");
-    title("Input  angles vs transmission angles");
 end
 %------------Body------------------%
+function getResults(precision)
+            theta2 = get_precision_angles(15,165,precision);
+            theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
+            theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
+            link_ratios = get_link_ratios(theta2, theta4);% uses freudeinsten equation to compute the link length ratios
+            [a,b,c,d] = get_link_lengths(link_ratios);% using the link ratios from above the respective link lengths are obtained
+            disp(["Crank: ",a]);
+            disp(["Coupler: ",b]);
+            disp(["Follower: ",c]);
+            disp(["Fixed Link: ",d]);
+            transmission_angles = get_transmission_angles(a,b,c,d,15,165,5);% transmission angles are then calculated
+            % commenting  on the quality of the transmission angles
+            if (all(transmission_angles >= 40)) || (all(transmission_angles <= 140))
+                disp("All the transmission angles guarantee a smooth rotation");
+            else
+                disp("Some transmission angles do not guarantee a smooth rotation");
+            end
+              % Plotting the input angles against the transmission angles.
+            input_angles = 15:5:165;
+             figure;
+            plot(input_angles,transmission_angles,'r');
+            xlabel("Input  angles");
+            ylabel("Transmission angles");
+            title("Transmission angles Vs Input  angles");
+end
+function link_ration = generateLinkRatios(precision)
+    theta2 = get_precision_angles(15,165,precision);
+    theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
+    theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
+    link_ration = get_link_ratios(theta2, theta4);% uses freudeinsten equation to compute the link length
+end
 function precision_angles = get_precision_angles(l_limit, u_limit, n_angles)
     % uses chebyshev's spacing to find the precision angles
     
