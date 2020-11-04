@@ -38,16 +38,16 @@ function getResults(precision)
             theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
             link_ratios = get_link_ratios(theta2, theta4);% uses freudeinsten equation to compute the link length ratios
             [a,b,c,d] = get_link_lengths(link_ratios);% using the link ratios from above the respective link lengths are obtained
-            disp(["Crank: ",a]);
-            disp(["Coupler: ",b]);
-            disp(["Follower: ",c]);
-            disp(["Fixed Link: ",d]);
+            msgl = msgbox(sprintf("Crank: %f\n\n Coupler: %f \n\n Follower: %f \n\n Fixed: %f",a,b,c,d));
+            set(msgl, 'Position',[730,400,100,120]);
             transmission_angles = get_transmission_angles(a,b,c,d,15,165,5);% transmission angles are then calculated
             % commenting  on the quality of the transmission angles
             if (all(transmission_angles >= 40)) || (all(transmission_angles <= 140))
-                disp("All the transmission angles guarantee a smooth rotation");
+                msg = msgbox(sprintf("All the transmission angles guarantee a smooth rotation"));
+                set(msg, 'Position',[730,200,220,50]);
             else
-                disp("Some transmission angles do not guarantee a smooth rotation");
+                msg = msgbox(sprintf("Some transmission angles do not guarantee a smooth rotation"));
+                set(msg, 'Position',[730,363,220,50])
             end
               % Plotting the input angles against the transmission angles.
             input_angles = 15:5:165;
@@ -81,7 +81,7 @@ function theta_4 = get_theta_4(theta_2)
     theta_4 = zeros(1,length(theta_2));% Initialize first before use to optimize performance.
     j = 1;
     for angle2 = theta_2
-        theta_4(j) = 65 + 0.43*angle2;
+        theta_4(j) = 65 + 0.43*angle2;% output mechanism function
         j = j + 1;
     end
 end
@@ -96,6 +96,7 @@ function link_ratios  = get_link_ratios(theta2, theta4)
    end
    A = [];
    b = [];
+   % rows in both the matrices are added in a loop with columns in each
    for i = 1:length(theta2)
        temp1 = [(cosd(theta4(i))) (-1 * (cosd(theta2(i)))) (1)];
        temp2 = cosd(theta2(i)-theta4(i));
@@ -105,20 +106,27 @@ function link_ratios  = get_link_ratios(theta2, theta4)
    % Least squares method of solving a system of linear equations simple
    % augmenting the matrix formed by the equations and row reducing it.
    
-   link_ratios = A\b;% (mldivide) Backslash uses the least squares method
+   link_ratios = A\b;% (mldivide) Back slash uses the least squares method
    % Comparing results of the least squares method in MatLab
    disp("lsqr()");
    disp(norm(lsqr(A,b)));
    disp("A\b");
    disp(norm(A\b));
+   % Apparently the accuracy of both methods is the same.
 end
 function [a,b,c,d] = get_link_lengths(link_ratios)
+% get_link_lengths uses the link ratios and the fixed link to find the
+% lengths of the other links.
+% Lengths can be negatives therefore absolutes of the calculated values are
+% sorted.
     d = 410;
     a = abs(d/link_ratios(1));
     c = abs(d/link_ratios(2));
     b = abs(sqrt(a^2  + c^2 + d^2 -(link_ratios(3) * 2 * a * c)));
 end
 function transmission_angles = get_transmission_angles(a,b,c,d,lower_limit, upper_limit, steps)
+% Transmission anngles are calculated using the obtained link lengths and
+% and the respective input angles 
     transmission_angles = zeros(1, ((165-15)/5));
     j = 1;
     for i = lower_limit:steps:upper_limit
@@ -128,6 +136,8 @@ function transmission_angles = get_transmission_angles(a,b,c,d,lower_limit, uppe
     end
 end
 function structuralErrors = get_structural_errors(theta2, theta4, link_ratios)
+% Structural error is basically the difference between the left side of the
+% freudeinsten's equation and the right side.
     structuralErrors = zeros(1,length(theta2));% theta4 can also be used since they are of the same length
     for i = 1:length(theta4)
         er1 = link_ratios(1)*cosd(theta4(i)) - link_ratios(2)*cosd(theta2(i)) + link_ratios(3) - cosd(theta2(i) - theta4(i));
