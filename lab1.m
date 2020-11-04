@@ -14,11 +14,13 @@ function lab1
     if(sl == 1)
         if (idx == 1)
                 %----------- Quiz (a) ---------
-            getResults(3);% calls the get results function with 3 precision points
+                % least squares disabled
+            computeUsingLeastSquares(3,false);% calls the get results function with 3 precision points
         end
         if (idx == 2)
                 %----------- Quiz (b) ---------
-             getResults(5);
+                % least squares enabled
+             computeUsingLeastSquares(5,true);
         end 
         if (idx == 3)
             link_ration_A = generateLinkRatios(3);
@@ -39,13 +41,13 @@ function lab1
     end
 end
 %------------Body------------------%
-function getResults(precision)
+function computeUsingLeastSquares(precision, lsqrBool)
             theta2 = get_precision_angles(15,165,precision);
             theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
             theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
-            link_ratios = get_link_ratios(theta2, theta4);% uses freudeinsten equation to compute the link length ratios
+            link_ratios = get_link_ratios(theta2, theta4,lsqrBool);% uses freudeinsten equation to compute the link length ratios
             [a,b,c,d] = get_link_lengths(link_ratios);% using the link ratios from above the respective link lengths are obtained
-            msgl = msgbox(sprintf("Crank: %f\n\n Coupler: %f \n\n Follower: %f \n\n Fixed: %f",a,b,c,d));
+            msgl = msgbox(sprintf("Crank: %f mm\n\n Coupler: %f mm\n\n Follower: %f mm\n\n Fixed: %f mm",a,b,c,d));
             set(msgl, 'Position',[730,400,100,120]);
             transmission_angles = get_transmission_angles(a,b,c,d,15,165,5);% transmission angles are then calculated
             % commenting  on the quality of the transmission angles
@@ -92,7 +94,7 @@ function theta_4 = get_theta_4(theta_2)
         j = j + 1;
     end
 end
-function link_ratios  = get_link_ratios(theta2, theta4)
+function link_ratios  = get_link_ratios(theta2, theta4, lsqrBool)
    % using the freudensteins method, this method computes the link ratios
    
    % To form a complete and functional matrix the two 1D arrays  should be
@@ -110,11 +112,14 @@ function link_ratios  = get_link_ratios(theta2, theta4)
        A = [A; temp1];
        b = [b; temp2];
    end
-   % Least squares method of solving a system of linear equations simple
-   % augmenting the matrix formed by the equations and row reducing it.
    
-   link_ratios = lsqr(A,b);
-   %link_ratios = A\b; %(mldivide) Back slash uses the least squares method
+   if(lsqrBool == true)
+       % Least squares method of solving a system of linear equations simple
+       % augmenting the matrix formed by the equations and row reducing it.
+       link_ratios = lsqr(A,b);
+   else
+       link_ratios = linsolve(A,b); %(mldivide) Back slash uses the least squares method
+   end
 end
 function [a,b,c,d] = get_link_lengths(link_ratios)
 % get_link_lengths uses the link ratios and the fixed link to find the
