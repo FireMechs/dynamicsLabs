@@ -23,8 +23,8 @@ function lab1
              computeUsingLeastSquares(5,true);
         end 
         if (idx == 3)
-            link_ration_A = generateLinkRatios(3);
-            link_ration_B = generateLinkRatios(5);
+            link_ration_A = generateLinkRatios(3, false);
+            link_ration_B = generateLinkRatios(5 , true);
             input_angles = 15:5:165;
                 % get the corresponding output angles
             output_angles = get_theta_4(input_angles);
@@ -66,11 +66,11 @@ function computeUsingLeastSquares(precision, lsqrBool)
             ylabel("Transmission angles");
             title("Transmission angles Vs Input  angles");
 end
-function link_ration = generateLinkRatios(precision)
+function link_ration = generateLinkRatios(precision, lsqrBool)
     theta2 = get_precision_angles(15,165,precision);
     theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
     theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
-    link_ration = get_link_ratios(theta2, theta4);% uses freudeinsten equation to compute the link length
+    link_ration = get_link_ratios(theta2, theta4,lsqrBool);% uses freudeinsten equation to compute the link length
 end
 function precision_angles = get_precision_angles(l_limit, u_limit, n_angles)
     % uses chebyshev's spacing to find the precision angles
