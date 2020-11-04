@@ -15,37 +15,26 @@ function lab1
         if (idx == 1)
                 %----------- Quiz (a) ---------
                 % least squares disabled
-            computeUsingLeastSquares(3,false);% calls the get results function with 3 precision points
+            question_a();% calls the get results function with 3 precision points
         end
         if (idx == 2)
                 %----------- Quiz (b) ---------
                 % least squares enabled
-             computeUsingLeastSquares(5,true);
+             question_b();
         end 
         if (idx == 3)
-            link_ration_A = generateLinkRatios(3, false);
-            link_ration_B = generateLinkRatios(5 , true);
-            input_angles = 15:5:165;
-                % get the corresponding output angles
-            output_angles = get_theta_4(input_angles);
-            structural_errors_A = get_structural_errors(input_angles, output_angles,link_ration_A);
-            structural_errors_B = get_structural_errors(input_angles, output_angles,link_ration_B);
-            figure;
-            plot(input_angles, structural_errors_A,'r-',input_angles, structural_errors_B,'b-');
-            xlabel("Input angles");
-            ylabel("Structural Error");
-            title("Structural Errors Vs Input  angles");
+            question_c();
         end
     else
         quit(1);
     end
 end
 %------------Body------------------%
-function computeUsingLeastSquares(precision, lsqrBool)
-            theta2 = get_precision_angles(15,165,precision);
+function question_a()
+            theta2 = get_precision_angles(15,165,3);
             theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
             theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
-            link_ratios = get_link_ratios(theta2, theta4,lsqrBool);% uses freudeinsten equation to compute the link length ratios
+            link_ratios = compute_freudensteins_constants(theta2, theta4);% uses freudeinsten equation to compute the link length ratios
             [a,b,c,d] = get_link_lengths(link_ratios);% using the link ratios from above the respective link lengths are obtained
             msgl = msgbox(sprintf("Crank: %f mm\n\n Coupler: %f mm\n\n Follower: %f mm\n\n Fixed: %f mm",a,b,c,d));
             set(msgl, 'Position',[730,400,100,120]);
@@ -66,6 +55,56 @@ function computeUsingLeastSquares(precision, lsqrBool)
             ylabel("Transmission angles");
             title("Transmission angles Vs Input  angles");
 end
+
+function question_b()
+            theta2 = get_precision_angles(15,165,5);
+            theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
+            theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
+            link_ratios = get_link_ratio_least_square(theta2, theta4);% uses freudeinsten equation to compute the link length ratios
+            [a,b,c,d] = get_link_lengths(link_ratios);% using the link ratios from above the respective link lengths are obtained
+            msgl = msgbox(sprintf("Crank: %f mm\n\n Coupler: %f mm\n\n Follower: %f mm\n\n Fixed: %f mm",a,b,c,d));
+            set(msgl, 'Position',[730,400,100,120]);
+            transmission_angles = get_transmission_angles(a,b,c,d,15,165,5);% transmission angles are then calculated
+            % commenting  on the quality of the transmission angles
+            if (all(transmission_angles >= 40)) || (all(transmission_angles <= 140))
+                msg = msgbox(sprintf("All the transmission angles guarantee a smooth rotation"));
+                set(msg, 'Position',[730,200,220,50]);
+            else
+                msg = msgbox(sprintf("Some transmission angles do not guarantee a smooth rotation"));
+                set(msg, 'Position',[730,363,220,50])
+            end
+              % Plotting the input angles against the transmission angles.
+            input_angles = 15:5:165;
+             figure;
+            plot(input_angles,transmission_angles,'r');
+            xlabel("Input  angles");
+            ylabel("Transmission angles");
+            title("Transmission angles Vs Input  angles");
+end
+
+function question_c()
+    theta2 = get_precision_angles(15,165,3);
+    theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
+    theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
+    link_ration_A = compute_freudensteins_constants(theta2, theta4);% uses freudeinsten equation to compute the link length ratios
+
+    theta2 = get_precision_angles(15,165,5);
+    theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
+    theta4 = get_theta_4(theta2);% Obtain O4 from O2 from above.
+    link_ration_B = get_link_ratio_least_square(theta2, theta4);% uses freudeinsten equation to compute the link length ratios
+
+    input_angles = 15:5:165;
+        % get the corresponding output angles
+    output_angles = get_theta_4(input_angles);
+    structural_errors_A = get_structural_errors(input_angles, output_angles,link_ration_A);
+    structural_errors_B = get_structural_errors(input_angles, output_angles,link_ration_B);
+    figure;
+    plot(input_angles, structural_errors_A,'r-',input_angles, structural_errors_B,'b-');
+    xlabel("Input angles");
+    ylabel("Structural Error");
+    title("Structural Errors Vs Input  angles");
+end
+
 function link_ration = generateLinkRatios(precision, lsqrBool)
     theta2 = get_precision_angles(15,165,precision);
     theta2 = arrayfun(@(val) rad2deg(val), theta2);% Changes the angles to degrees for the rest of the computation.
@@ -74,7 +113,9 @@ function link_ration = generateLinkRatios(precision, lsqrBool)
 end
 function precision_angles = get_precision_angles(l_limit, u_limit, n_angles)
     % uses chebyshev's spacing to find the precision angles
-    
+    % l_limit: The lower limit for teh range
+    % u_limit: The upper limit for the range
+    % n_angles; The number of precision precision points
     % Using  angles in radians for chebyshev's spacing formula proved to be easy. 
     l_limit = deg2rad(l_limit);
     u_limit = deg2rad(u_limit);
@@ -87,6 +128,7 @@ end
 function theta_4 = get_theta_4(theta_2)
     % using the given output function, this function computes the output
     % angles from the given input angles
+    % output_angle = 65 + (0.43 * input_angle)
     theta_4 = zeros(1,length(theta_2));% Initialize first before use to optimize performance.
     j = 1;
     for angle2 = theta_2
@@ -94,7 +136,31 @@ function theta_4 = get_theta_4(theta_2)
         j = j + 1;
     end
 end
-function link_ratios  = get_link_ratios(theta2, theta4, lsqrBool)
+
+function link_ratios = compute_freudensteins_constants(theta2, theta4)
+   % We will use the Freudenstein’s equation. It relate the input to output as a function
+   % of the size of the linkages. For a given input φ we can use this equation to solve for the
+   % output ψ
+   % Equation: k1(cos ψ) − k2(cos φ) + k3 = cos(φ − ψ)
+   % To form a complete and functional matrix the two 1D arrays  should be
+   % of the same length. If not, this raises a compile time error.
+   if(length(theta4) ~= length(theta2))
+       disp("Matrices' lengths not equal");
+       quit(1);
+   end
+   A = [];
+   b = [];
+   % rows in both the matrices are added in a loop with columns in each
+   for i = 1:length(theta2)
+       temp1 = [(cosd(theta4(i))) (-1 * (cosd(theta2(i)))) (1)];
+       temp2 = cosd(theta2(i)-theta4(i));
+       A = [A; temp1];
+       b = [b; temp2];
+   end
+   link_ratios = linsolve(A,b);
+end
+
+function link_ratios  = get_link_ratio_least_square(theta2, theta4)
    % using the freudensteins method, this method computes the link ratios
    
    % To form a complete and functional matrix the two 1D arrays  should be
@@ -112,14 +178,9 @@ function link_ratios  = get_link_ratios(theta2, theta4, lsqrBool)
        A = [A; temp1];
        b = [b; temp2];
    end
-   
-   if(lsqrBool == true)
-       % Least squares method of solving a system of linear equations simple
-       % augmenting the matrix formed by the equations and row reducing it.
-       link_ratios = lsqr(A,b);
-   else
-       link_ratios = linsolve(A,b); %(mldivide) Back slash uses the least squares method
-   end
+   % Least squares method of solving a system of linear equations simple
+   % augmenting the matrix formed by the equations and row reducing it.
+   link_ratios = lsqr(A,b);
 end
 function [a,b,c,d] = get_link_lengths(link_ratios)
 % get_link_lengths uses the link ratios and the fixed link to find the
