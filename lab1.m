@@ -1,6 +1,13 @@
+%	Reg					Name
+%	___					____
+%	ENM221-0068/2017	Kipng'eno Erick Koech		
+%	ENM221-0092/2017	Osodo Rodney David	
+%	ENM221-0058/2017	Karimi Kelvin Gitu
+%	ENM221-0247/2017	Kimani Claudio
+
 %------------------------main--------------------------%
 
-% Arrays are initialized before assigning to boost the performance of the
+% [INFO]Arrays are initialized before assigning to boost the performance of the
 % program.
 function lab1
     [idx, sl] = listdlg('ListSize',[150,150],'PromptString',{'Select question'},'SelectionMode','single','ListString',{'a','b','c'});
@@ -106,13 +113,8 @@ function link_ratios  = get_link_ratios(theta2, theta4)
    % Least squares method of solving a system of linear equations simple
    % augmenting the matrix formed by the equations and row reducing it.
    
-   link_ratios = A\b;% (mldivide) Back slash uses the least squares method
-   % Comparing results of the least squares method in MatLab
-   disp("lsqr()");
-   disp(norm(lsqr(A,b)));
-   disp("A\b");
-   disp(norm(A\b));
-   % Apparently the accuracy of both methods is the same.
+   link_ratios = lsqr(A,b);
+   %link_ratios = A\b; %(mldivide) Back slash uses the least squares method
 end
 function [a,b,c,d] = get_link_lengths(link_ratios)
 % get_link_lengths uses the link ratios and the fixed link to find the
